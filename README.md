@@ -1,5 +1,7 @@
 # WinForms.Markdown
 
+[![Release](https://github.com/bolorundurowb/WinForms.Markdown/actions/workflows/release.yml/badge.svg)](https://github.com/bolorundurowb/WinForms.Markdown/actions/workflows/release.yml)
+
 A native, lightweight, open-source Markdown control for Windows Forms. Markdown
 is parsed into a small AST and rendered directly onto the control using GDI+
 (`TextRenderer`) — **no web browser, no `WebView2`, and no HTML** anywhere in the
