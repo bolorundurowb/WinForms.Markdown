@@ -6,7 +6,7 @@ namespace WinForms.Markdown.Markdown;
 /// A small, dependency-free Markdown parser. It converts raw Markdown text into
 /// a lightweight AST (<see cref="MarkdownDocument"/>) covering the block and
 /// inline elements the control understands: headings, paragraphs, bold, italic,
-/// underline and strikethrough. It intentionally does not know anything about
+/// underline, strikethrough and hyperlinks. It intentionally does not know anything about
 /// rendering or GDI+.
 /// </summary>
 public static class MarkdownParser
@@ -35,7 +35,7 @@ public static class MarkdownParser
         // Normalise line endings so the rest of the parser only ever sees '\n'.
         // The null-forgiving operator is required on net48, which lacks the
         // NotNullWhen annotation on string.IsNullOrEmpty.
-        string normalized = markdown!.Replace("\r\n", "\n").Replace('\r', '\n');
+        var normalized = markdown!.Replace("\r\n", "\n").Replace('\r', '\n');
 
         var blocks = new List<Block>();
         var paragraphLines = new List<string>();
@@ -49,19 +49,19 @@ public static class MarkdownParser
 
             // Paragraph lines are joined with a newline, which the renderer
             // treats as an explicit (soft) line break.
-            string joined = string.Join("\n", paragraphLines);
+            var joined = string.Join("\n", paragraphLines);
             var inlines = ParseInlines(joined, 0, joined.Length);
             blocks.Add(new ParagraphBlock(inlines));
 
             paragraphLines.Clear();
         }
 
-        string[] lines = normalized.Split('\n');
-        foreach (string rawLine in lines)
+        var lines = normalized.Split('\n');
+        foreach (var rawLine in lines)
         {
-            string line = rawLine.TrimEnd();
+            var line = rawLine.TrimEnd();
 
-            if (TryParseHeading(line, out int level, out string headingText))
+            if (TryParseHeading(line, out var level, out var headingText))
             {
                 FlushParagraph();
                 var inlines = new List<Inline>();
@@ -88,7 +88,7 @@ public static class MarkdownParser
         level = 0;
         text = string.Empty;
 
-        int i = 0;
+        var i = 0;
         while (i < line.Length && line[i] == '#' && i < 6)
         {
             i++;
@@ -115,30 +115,42 @@ public static class MarkdownParser
     {
         var result = new List<Inline>();
         var buffer = new StringBuilder();
-        int i = start;
+        var i = start;
 
         while (i < end)
         {
-            bool matched = false;
+            if (TryParseLink(text, i, end, out var link, out var linkEnd))
+            {
+                Flush(result, buffer);
+                result.Add(link!);
+                i = linkEnd;
+                continue;
+            }
 
-            foreach ((string open, string close, InlineStyle style) in InlineMarkers)
+            if (TryParseAutolink(text, i, end, out var autolink, out var autolinkEnd))
+            {
+                Flush(result, buffer);
+                result.Add(autolink!);
+                i = autolinkEnd;
+                continue;
+            }
+
+            var matched = false;
+
+            foreach (var (open, close, style) in InlineMarkers)
             {
                 if (!Matches(text, i, end, open))
                 {
                     continue;
                 }
 
-                int closeIndex = FindClose(text, i + open.Length, end, open, close);
+                var closeIndex = FindClose(text, i + open.Length, end, open, close);
                 if (closeIndex < 0)
                 {
                     continue;
                 }
 
-                if (buffer.Length > 0)
-                {
-                    result.Add(new TextInline(buffer.ToString()));
-                    buffer.Clear();
-                }
+                Flush(result, buffer);
 
                 var children = ParseInlines(text, i + open.Length, closeIndex);
                 result.Add(new FormattedInline(style, children));
@@ -155,12 +167,135 @@ public static class MarkdownParser
             }
         }
 
-        if (buffer.Length > 0)
+        Flush(result, buffer);
+        return result;
+    }
+
+    private static void Flush(List<Inline> result, StringBuilder buffer)
+    {
+        if (buffer.Length == 0)
         {
-            result.Add(new TextInline(buffer.ToString()));
+            return;
         }
 
-        return result;
+        result.Add(new TextInline(buffer.ToString()));
+        buffer.Clear();
+    }
+
+    private static bool TryParseLink(string text, int index, int end, out LinkInline? link, out int next)
+    {
+        link = null;
+        next = index;
+        if (index >= end || text[index] != '[')
+        {
+            return false;
+        }
+
+        var labelEnd = FindBalanced(text, index + 1, end, '[', ']');
+        if (labelEnd < 0 || labelEnd + 1 >= end || text[labelEnd + 1] != '(')
+        {
+            return false;
+        }
+
+        var destinationEnd = FindBalanced(text, labelEnd + 2, end, '(', ')');
+        if (destinationEnd < 0)
+        {
+            return false;
+        }
+
+        var url = ExtractUrl(text.Substring(labelEnd + 2, destinationEnd - (labelEnd + 2)));
+        if (url.Length == 0)
+        {
+            return false;
+        }
+
+        var children = ParseInlines(text, index + 1, labelEnd);
+        if (children.Count == 0)
+        {
+            children.Add(new TextInline(url));
+        }
+
+        link = new LinkInline(url, children);
+        next = destinationEnd + 1;
+        return true;
+    }
+
+    private static bool TryParseAutolink(string text, int index, int end, out LinkInline? link, out int next)
+    {
+        link = null;
+        next = index;
+        if (index >= end || text[index] != '<')
+        {
+            return false;
+        }
+
+        var close = text.IndexOf('>', index + 1, end - (index + 1));
+        if (close < 0)
+        {
+            return false;
+        }
+
+        var url = text.Substring(index + 1, close - (index + 1)).Trim();
+        if (url.IndexOf(' ') >= 0 || !HasWebScheme(url))
+        {
+            return false;
+        }
+
+        link = new LinkInline(url, new[] { new TextInline(url) });
+        next = close + 1;
+        return true;
+    }
+
+    private static int FindBalanced(string text, int from, int end, char open, char close)
+    {
+        var depth = 1;
+        for (var i = from; i < end; i++)
+        {
+            if (text[i] == '\\' && i + 1 < end)
+            {
+                i++;
+                continue;
+            }
+
+            if (text[i] == open)
+            {
+                depth++;
+            }
+            else if (text[i] == close && --depth == 0)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static string ExtractUrl(string destination)
+    {
+        var value = destination.Trim();
+        if (value.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        if (value[0] == '<')
+        {
+            var close = value.IndexOf('>');
+            if (close > 1)
+            {
+                return value.Substring(1, close - 1).Trim();
+            }
+        }
+
+        var space = value.IndexOfAny(new[] { ' ', '\t' });
+        return space > 0 ? value.Substring(0, space) : value;
+    }
+
+    private static bool HasWebScheme(string url)
+    {
+        return url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool Matches(string text, int index, int end, string token)
@@ -170,7 +305,7 @@ public static class MarkdownParser
             return false;
         }
 
-        for (int i = 0; i < token.Length; i++)
+        for (var i = 0; i < token.Length; i++)
         {
             if (text[index + i] != token[i])
             {
@@ -197,9 +332,9 @@ public static class MarkdownParser
             return text.IndexOf(close, from, end - from, StringComparison.Ordinal);
         }
 
-        char c = close[0];
-        int length = close.Length;
-        int i = from;
+        var c = close[0];
+        var length = close.Length;
+        var i = from;
 
         while (i < end)
         {
@@ -209,8 +344,8 @@ public static class MarkdownParser
                 continue;
             }
 
-            int runStart = i;
-            int runLength = 0;
+            var runStart = i;
+            var runLength = 0;
             while (i < end && text[i] == c)
             {
                 i++;

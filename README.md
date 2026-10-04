@@ -32,6 +32,7 @@ The sample application stays on a modern TFM.
 | Italic        | `*italic*` or `_italic_`                     |
 | Underline     | `<u>underline</u>` or `~underline~`          |
 | Strikethrough | `~~strikethrough~~`                          |
+| Hyperlinks    | `[text](url)` and `<https://example.com>`    |
 | Paragraphs    | Consecutive lines                            |
 
 ## Usage

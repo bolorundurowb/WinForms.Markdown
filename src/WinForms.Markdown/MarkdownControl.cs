@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using WinForms.Markdown.Markdown;
 using WinForms.Markdown.Rendering;
@@ -22,6 +23,7 @@ public class MarkdownControl : ScrollableControl
         TextFormatFlags.Top;
 
     private string _markdownText = string.Empty;
+    private Color _linkColor = Color.FromArgb(0, 102, 204);
     private MarkdownRenderer? _renderer;
     private MarkdownDocument _document = MarkdownDocument.Empty;
     private MarkdownLayout? _layout;
@@ -71,6 +73,24 @@ public class MarkdownControl : ScrollableControl
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public MarkdownDocument Document => _document;
 
+    /// <summary>Gets or sets the colour used to paint hyperlinks.</summary>
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+    public Color LinkColor
+    {
+        get => _linkColor;
+        set
+        {
+            if (_linkColor == value)
+            {
+                return;
+            }
+
+            _linkColor = value;
+            RebuildLayout();
+            Invalidate();
+        }
+    }
+
     private MarkdownRenderer Renderer
     {
         get
@@ -88,8 +108,8 @@ public class MarkdownControl : ScrollableControl
         // The native vertical scrollbar reduces ClientSize.Width when it appears,
         // which raises Resize and triggers a re-layout at the narrower width, so we
         // simply always wrap to the current client width (no manual reservation).
-        int availableWidth = Math.Max(1, ClientSize.Width - Padding.Horizontal);
-        _layout = Renderer.Layout(_document, availableWidth, ForeColor, Padding);
+        var availableWidth = Math.Max(1, ClientSize.Width - Padding.Horizontal);
+        _layout = Renderer.Layout(_document, availableWidth, ForeColor, LinkColor, Padding);
         AutoScrollMinSize = new Size(0, _layout.ContentHeight);
     }
 
@@ -97,9 +117,9 @@ public class MarkdownControl : ScrollableControl
     {
         base.OnPaint(e);
 
-        Graphics g = e.Graphics;
+        var g = e.Graphics;
 
-        using (SolidBrush background = new SolidBrush(BackColor))
+        using (var background = new SolidBrush(BackColor))
         {
             g.FillRectangle(background, ClientRectangle);
         }
@@ -110,12 +130,75 @@ public class MarkdownControl : ScrollableControl
         }
 
         g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
-        foreach (TextRun run in _layout.Runs)
+        foreach (var run in _layout.Runs)
         {
             TextRenderer.DrawText(g, run.Text, run.Font, run.Bounds.Location, run.Color, DrawFlags);
         }
 
         g.ResetTransform();
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        Cursor = HitTest(e.Location) is null ? Cursors.Default : Cursors.Hand;
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        base.OnMouseLeave(e);
+        Cursor = Cursors.Default;
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (e.Button != MouseButtons.Left)
+        {
+            return;
+        }
+
+        var url = HitTest(e.Location)?.Url;
+        if (url is not null)
+        {
+            OpenLink(url);
+        }
+    }
+
+    private TextRun? HitTest(Point clientPoint)
+    {
+        if (_layout is null)
+        {
+            return null;
+        }
+
+        var point = new Point(clientPoint.X - AutoScrollPosition.X, clientPoint.Y - AutoScrollPosition.Y);
+        foreach (var run in _layout.Runs)
+        {
+            if (run.Url is not null && run.Bounds.Contains(point))
+            {
+                return run;
+            }
+        }
+
+        return null;
+    }
+
+    private static void OpenLink(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || !IsWebScheme(uri))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+    }
+
+    private static bool IsWebScheme(Uri uri)
+    {
+        return uri.Scheme == Uri.UriSchemeHttp
+            || uri.Scheme == Uri.UriSchemeHttps
+            || uri.Scheme == Uri.UriSchemeMailto;
     }
 
     protected override void OnResize(EventArgs e)

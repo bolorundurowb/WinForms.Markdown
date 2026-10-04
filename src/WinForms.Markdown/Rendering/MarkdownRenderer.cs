@@ -11,12 +11,13 @@ namespace WinForms.Markdown.Rendering;
 /// </summary>
 public sealed class TextRun
 {
-    public TextRun(string text, Font font, Color color, Rectangle bounds)
+    public TextRun(string text, Font font, Color color, Rectangle bounds, string? url = null)
     {
         Text = text;
         Font = font;
         Color = color;
         Bounds = bounds;
+        Url = url;
     }
 
     public string Text { get; }
@@ -26,6 +27,9 @@ public sealed class TextRun
     public Color Color { get; }
 
     public Rectangle Bounds { get; }
+
+    /// <summary>The hyperlink address, when this run is part of a link.</summary>
+    public string? Url { get; }
 }
 
 /// <summary>The result of laying a document out against a given width.</summary>
@@ -73,16 +77,16 @@ public sealed class MarkdownRenderer : IDisposable
     /// Lays the document out within <paramref name="availableWidth"/> (the width
     /// of the area available for text).
     /// </summary>
-    public MarkdownLayout Layout(MarkdownDocument document, int availableWidth, Color foreColor, Padding padding)
+    public MarkdownLayout Layout(MarkdownDocument document, int availableWidth, Color foreColor, Color linkColor, Padding padding)
     {
         var runs = new List<TextRun>();
-        int left = padding.Left;
-        int right = Math.Max(left + 1, availableWidth - padding.Right);
-        int y = padding.Top;
-        int maxWidth = 0;
-        bool first = true;
+        var left = padding.Left;
+        var right = Math.Max(left + 1, availableWidth - padding.Right);
+        var y = padding.Top;
+        var maxWidth = 0;
+        var first = true;
 
-        foreach (Block block in document.Blocks)
+        foreach (var block in document.Blocks)
         {
             if (!first)
             {
@@ -94,33 +98,33 @@ public sealed class MarkdownRenderer : IDisposable
             switch (block)
             {
                 case HeadingBlock heading:
-                    y = LayoutHeading(heading, left, right, y, foreColor, runs, ref maxWidth);
+                    y = LayoutHeading(heading, left, right, y, foreColor, linkColor, runs, ref maxWidth);
                     break;
 
                 case ParagraphBlock paragraph:
-                    y = LayoutParagraph(paragraph, left, right, y, foreColor, runs, ref maxWidth);
+                    y = LayoutParagraph(paragraph, left, right, y, foreColor, linkColor, runs, ref maxWidth);
                     break;
             }
         }
 
-        int contentHeight = y + padding.Bottom;
-        int contentWidth = maxWidth + padding.Right;
+        var contentHeight = y + padding.Bottom;
+        var contentWidth = maxWidth + padding.Right;
         return new MarkdownLayout(runs, contentWidth, contentHeight);
     }
 
     private int BlockSpacing => Math.Max(4, (int)Math.Round(_baseFont.Size * 0.8f));
 
-    private int LayoutHeading(HeadingBlock heading, int left, int right, int y, Color color, List<TextRun> runs, ref int maxWidth)
+    private int LayoutHeading(HeadingBlock heading, int left, int right, int y, Color color, Color linkColor, List<TextRun> runs, ref int maxWidth)
     {
-        float size = _baseFont.Size * HeadingScales[Polyfill.Clamp(heading.Level, 1, 6)];
-        Font headingFont = GetFont(size, FontStyle.Bold);
-        var inlineRuns = Flatten(heading.Inlines, size, FontStyle.Bold, color);
+        var size = _baseFont.Size * HeadingScales[Polyfill.Clamp(heading.Level, 1, 6)];
+        var headingFont = GetFont(size, FontStyle.Bold);
+        var inlineRuns = Flatten(heading.Inlines, size, FontStyle.Bold, color, linkColor);
 
-        int x = left;
-        foreach (Run run in inlineRuns)
+        var x = left;
+        foreach (var run in inlineRuns)
         {
-            Size measured = Measure(run.Text, run.Font);
-            runs.Add(new TextRun(run.Text, run.Font, run.Color, new Rectangle(x, y, measured.Width, measured.Height)));
+            var measured = Measure(run.Text, run.Font);
+            runs.Add(new TextRun(run.Text, run.Font, run.Color, new Rectangle(x, y, measured.Width, measured.Height), run.Url));
             x += measured.Width;
         }
 
@@ -128,33 +132,33 @@ public sealed class MarkdownRenderer : IDisposable
         return y + LineHeight(headingFont);
     }
 
-    private int LayoutParagraph(ParagraphBlock paragraph, int left, int right, int y, Color color, List<TextRun> runs, ref int maxWidth)
+    private int LayoutParagraph(ParagraphBlock paragraph, int left, int right, int y, Color color, Color linkColor, List<TextRun> runs, ref int maxWidth)
     {
-        float size = _baseFont.Size;
-        var inlineRuns = Flatten(paragraph.Inlines, size, _baseFont.Style, color);
+        var size = _baseFont.Size;
+        var inlineRuns = Flatten(paragraph.Inlines, size, _baseFont.Style, color, linkColor);
         return LayoutWrapped(inlineRuns, left, right, y, runs, ref maxWidth);
     }
 
     /// <summary>Word-wraps a stream of inline runs into positioned text runs.</summary>
     private int LayoutWrapped(List<Run> inlineRuns, int left, int right, int topY, List<TextRun> output, ref int maxWidth)
     {
-        int available = right - left;
-        int baseHeight = LineHeight(_baseFont);
+        var available = right - left;
+        var baseHeight = LineHeight(_baseFont);
         var line = new List<(Token Token, int Width)>();
-        int lineWidth = 0;
-        int lineHeight = baseHeight;
-        int y = topY;
-        int blockMaxWidth = 0;
+        var lineWidth = 0;
+        var lineHeight = baseHeight;
+        var y = topY;
+        var blockMaxWidth = 0;
 
         void Commit()
         {
-            int x = left;
-            int committedHeight = lineHeight;
-            foreach ((Token token, int width) in line)
+            var x = left;
+            var committedHeight = lineHeight;
+            foreach (var (token, width) in line)
             {
                 if (token.Kind == TokenKind.Word)
                 {
-                    output.Add(new TextRun(token.Text, token.Font, token.Color, new Rectangle(x, y, width, committedHeight)));
+                    output.Add(new TextRun(token.Text, token.Font, token.Color, new Rectangle(x, y, width, committedHeight), token.Url));
                 }
 
                 x += width;
@@ -167,7 +171,7 @@ public sealed class MarkdownRenderer : IDisposable
             lineHeight = baseHeight;
         }
 
-        foreach (Token token in Tokenize(inlineRuns))
+        foreach (var token in Tokenize(inlineRuns))
         {
             if (token.Kind == TokenKind.Break)
             {
@@ -183,8 +187,8 @@ public sealed class MarkdownRenderer : IDisposable
                 continue;
             }
 
-            int width = Measure(token.Text, token.Font).Width;
-            int height = LineHeight(token.Font);
+            var width = Measure(token.Text, token.Font).Width;
+            var height = LineHeight(token.Font);
 
             if (line.Count > 0 && lineWidth + width > available)
             {
@@ -219,7 +223,7 @@ public sealed class MarkdownRenderer : IDisposable
 
     private static IEnumerable<Token> Tokenize(List<Run> runs)
     {
-        foreach (Run run in runs)
+        foreach (var run in runs)
         {
             var word = new StringBuilder();
             foreach (char c in run.Text)
@@ -228,21 +232,21 @@ public sealed class MarkdownRenderer : IDisposable
                 {
                     if (word.Length > 0)
                     {
-                        yield return new Token(word.ToString(), run.Font, run.Color, TokenKind.Word);
+                        yield return new Token(word.ToString(), run.Font, run.Color, run.Url, TokenKind.Word);
                         word.Clear();
                     }
 
-                    yield return new Token("\n", run.Font, run.Color, TokenKind.Break);
+                    yield return new Token("\n", run.Font, run.Color, run.Url, TokenKind.Break);
                 }
                 else if (char.IsWhiteSpace(c))
                 {
                     if (word.Length > 0)
                     {
-                        yield return new Token(word.ToString(), run.Font, run.Color, TokenKind.Word);
+                        yield return new Token(word.ToString(), run.Font, run.Color, run.Url, TokenKind.Word);
                         word.Clear();
                     }
 
-                    yield return new Token(c.ToString(), run.Font, run.Color, TokenKind.Space);
+                    yield return new Token(c.ToString(), run.Font, run.Color, run.Url, TokenKind.Space);
                 }
                 else
                 {
@@ -252,44 +256,49 @@ public sealed class MarkdownRenderer : IDisposable
 
             if (word.Length > 0)
             {
-                yield return new Token(word.ToString(), run.Font, run.Color, TokenKind.Word);
+                yield return new Token(word.ToString(), run.Font, run.Color, run.Url, TokenKind.Word);
             }
         }
     }
 
     /// <summary>Flattens nested inline nodes into a flat list of styled runs.</summary>
-    private List<Run> Flatten(IReadOnlyList<Inline> inlines, float size, FontStyle baseStyle, Color color)
+    private List<Run> Flatten(IReadOnlyList<Inline> inlines, float size, FontStyle baseStyle, Color color, Color linkColor)
     {
         var runs = new List<Run>();
 
-        void Walk(IReadOnlyList<Inline> items, FontStyle style)
+        void Walk(IReadOnlyList<Inline> items, FontStyle style, Color runColor, string? url)
         {
-            foreach (Inline inline in items)
+            foreach (var inline in items)
             {
                 switch (inline)
                 {
                     case TextInline text:
                         if (text.Text.Length > 0)
                         {
-                            runs.Add(new Run(text.Text, GetFont(size, style), color));
+                            runs.Add(new Run(text.Text, GetFont(size, style), runColor, url));
                         }
 
                         break;
 
                     case FormattedInline formatted:
-                        Walk(formatted.Children, style | ToFontStyle(formatted.Style));
+                        Walk(formatted.Children, style | ToFontStyle(formatted.Style), runColor, url);
+                        break;
+
+                    case LinkInline link:
+                        var children = link.Children;
+                        Walk(children, style | FontStyle.Underline, linkColor, link.Url);
                         break;
                 }
             }
         }
 
-        Walk(inlines, baseStyle);
+        Walk(inlines, baseStyle, color, null);
         return runs;
     }
 
     private static FontStyle ToFontStyle(InlineStyle style)
     {
-        FontStyle result = FontStyle.Regular;
+        var result = FontStyle.Regular;
         if ((style & InlineStyle.Bold) != 0)
         {
             result |= FontStyle.Bold;
@@ -316,7 +325,7 @@ public sealed class MarkdownRenderer : IDisposable
     private Font GetFont(float size, FontStyle style)
     {
         var key = (size, style);
-        if (!_fontCache.TryGetValue(key, out Font? font))
+        if (!_fontCache.TryGetValue(key, out var font))
         {
             font = new Font(_baseFont.FontFamily, size, style, _baseFont.Unit);
             _fontCache[key] = font;
@@ -334,7 +343,7 @@ public sealed class MarkdownRenderer : IDisposable
 
     public void Dispose()
     {
-        foreach (Font font in _ownedFonts)
+        foreach (var font in _ownedFonts)
         {
             font.Dispose();
         }
@@ -343,9 +352,9 @@ public sealed class MarkdownRenderer : IDisposable
         _fontCache.Clear();
     }
 
-    private readonly record struct Run(string Text, Font Font, Color Color);
+    private readonly record struct Run(string Text, Font Font, Color Color, string? Url);
 
-    private readonly record struct Token(string Text, Font Font, Color Color, TokenKind Kind);
+    private readonly record struct Token(string Text, Font Font, Color Color, string? Url, TokenKind Kind);
 
     private enum TokenKind
     {

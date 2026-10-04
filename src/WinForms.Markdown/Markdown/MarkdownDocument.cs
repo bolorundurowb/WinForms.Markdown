@@ -30,6 +30,20 @@ public sealed class TextInline : Inline
     public string Text { get; }
 }
 
+/// <summary>A hyperlink: <c>[label](url)</c> or an autolink such as <c>&lt;https://example.com&gt;</c>.</summary>
+public sealed class LinkInline : Inline
+{
+    public LinkInline(string url, IReadOnlyList<Inline> children)
+    {
+        Url = url;
+        Children = children;
+    }
+
+    public string Url { get; }
+
+    public IReadOnlyList<Inline> Children { get; }
+}
+
 /// <summary>A span of text wrapped in one or more formatting styles.</summary>
 public sealed class FormattedInline : Inline
 {

@@ -25,6 +25,7 @@ internal sealed class MainForm : Form
         - *italic* and _italic_
         - <u>underline</u> and ~underline~
         - ~~strikethrough~~
+        - [WinForms.Markdown](https://github.com/bolorundurowb/WinForms.Markdown)
 
         ### A heading with *mixed* **styles**
 
