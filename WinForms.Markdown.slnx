@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/WinForms.Markdown.Demo/WinForms.Markdown.Demo.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/WinForms.Markdown/WinForms.Markdown.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WinForms.Markdown.Tests/WinForms.Markdown.Tests.csproj" />
+  </Folder>
+</Solution>
