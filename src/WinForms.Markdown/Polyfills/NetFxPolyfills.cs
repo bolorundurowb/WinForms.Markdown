@@ -29,7 +29,7 @@ namespace System
 
         public int GetOffset(int length)
         {
-            int offset = _value;
+            var offset = _value;
             if (offset < 0)
             {
                 offset += length + 1;
@@ -56,8 +56,8 @@ namespace System
 
         public (int Offset, int Length) GetOffsetAndLength(int length)
         {
-            int start = Start.GetOffset(length);
-            int end = End.GetOffset(length);
+            var start = Start.GetOffset(length);
+            var end = End.GetOffset(length);
             if ((uint)end > (uint)length || (uint)start > (uint)end)
             {
                 throw new ArgumentOutOfRangeException(nameof(length));

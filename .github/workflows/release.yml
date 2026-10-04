@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [main, master]
+    branches: [master]
     paths:
       - 'src/WinForms.Markdown/WinForms.Markdown.csproj'
 
