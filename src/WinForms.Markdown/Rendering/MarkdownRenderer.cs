@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text;
+using WinForms.Markdown;
 using WinForms.Markdown.Markdown;
 
 namespace WinForms.Markdown.Rendering;
@@ -70,7 +71,7 @@ public sealed class MarkdownRenderer : IDisposable
 
     /// <summary>
     /// Lays the document out within <paramref name="availableWidth"/> (the width
-    /// of the area available for text, after any scrollbar has been reserved).
+    /// of the area available for text).
     /// </summary>
     public MarkdownLayout Layout(MarkdownDocument document, int availableWidth, Color foreColor, Padding padding)
     {
@@ -111,7 +112,7 @@ public sealed class MarkdownRenderer : IDisposable
 
     private int LayoutHeading(HeadingBlock heading, int left, int right, int y, Color color, List<TextRun> runs, ref int maxWidth)
     {
-        float size = _baseFont.Size * HeadingScales[Math.Clamp(heading.Level, 1, 6)];
+        float size = _baseFont.Size * HeadingScales[Polyfill.Clamp(heading.Level, 1, 6)];
         Font headingFont = GetFont(size, FontStyle.Bold);
         var inlineRuns = Flatten(heading.Inlines, size, FontStyle.Bold, color);
 

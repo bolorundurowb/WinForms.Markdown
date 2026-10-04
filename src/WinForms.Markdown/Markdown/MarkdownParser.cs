@@ -32,8 +32,10 @@ public static class MarkdownParser
             return MarkdownDocument.Empty;
         }
 
-        // Normalize line endings so the rest of the parser only ever sees '\n'.
-        string normalized = markdown.Replace("\r\n", "\n").Replace('\r', '\n');
+        // Normalise line endings so the rest of the parser only ever sees '\n'.
+        // The null-forgiving operator is required on net48, which lacks the
+        // NotNullWhen annotation on string.IsNullOrEmpty.
+        string normalized = markdown!.Replace("\r\n", "\n").Replace('\r', '\n');
 
         var blocks = new List<Block>();
         var paragraphLines = new List<string>();

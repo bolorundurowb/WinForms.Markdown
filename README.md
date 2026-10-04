@@ -5,6 +5,17 @@ is parsed into a small AST and rendered directly onto the control using GDI+
 (`TextRenderer`) — **no web browser, no `WebView2`, and no HTML** anywhere in the
 pipeline.
 
+## Target frameworks
+
+The library targets:
+
+- .NET Framework 4.8 (`net48`)
+- .NET 6 (`net6.0-windows`)
+- .NET 8 (`net8.0-windows`)
+- .NET 10 (`net10.0-windows`)
+
+The sample application stays on a modern TFM.
+
 ## Features
 
 - Renders Markdown natively with `System.Drawing` / GDI+.
@@ -46,13 +57,22 @@ form.Controls.Add(markdown);
 Application.Run(form);
 ```
 
+## Repository layout
+
+```
+src/WinForms.Markdown/           # The library
+samples/WinForms.Markdown.Demo/  # Runnable usage example
+tests/WinForms.Markdown.Tests/   # Parser and renderer unit tests
+```
+
 ## Build
 
 ```powershell
-dotnet build WinForms.Markdown.csproj -c Release
-dotnet pack WinForms.Markdown.csproj -c Release
+dotnet build WinForms.Markdown.slnx -c Release
+dotnet test tests/WinForms.Markdown.Tests/WinForms.Markdown.Tests.csproj -c Release
+dotnet pack src/WinForms.Markdown/WinForms.Markdown.csproj -c Release
 ```
 
-## License
+## Licence
 
 [MIT](LICENSE)

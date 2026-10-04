@@ -26,7 +26,7 @@ public class MarkdownControl : ScrollableControl
     private MarkdownDocument _document = MarkdownDocument.Empty;
     private MarkdownLayout? _layout;
 
-    /// <summary>Initializes a new instance of the <see cref="MarkdownControl"/> class.</summary>
+    /// <summary>Initialises a new instance of the <see cref="MarkdownControl"/> class.</summary>
     public MarkdownControl()
     {
         SetStyle(
