@@ -50,7 +50,8 @@ jobs:
           $version = '${{ steps.version.outputs.version }}'
           $tag = "v$version"
 
-          $existing = git rev-parse --verify --quiet "refs/tags/$tag"
+          # git tag --list always exits 0, so this check never fails the step.
+          $existing = git tag --list $tag
           if ($existing) {
             Write-Host "Tag '$tag' already exists - skipping release."
             "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
