@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>WinForms.Markdown</RootNamespace>
+    <AssemblyName>WinForms.Markdown</AssemblyName>
+
+    <!-- NuGet package metadata -->
+    <PackageId>WinForms.Markdown</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Winner-Timothy Bolorunduro</Authors>
+    <Company>WinForms.Markdown</Company>
+    <Product>WinForms.Markdown</Product>
+    <Description>A native, lightweight Markdown control for Windows Forms that renders Markdown directly with GDI+ without a web browser.</Description>
+    <PackageTags>winforms;markdown;control;gdi;rendering;dotnet</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/bolorundurowb/WinForms.Markdown.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/bolorundurowb/WinForms.Markdown</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Symbols package (.snupkg) -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Reproducible symbols packages in CI -->
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- Ship the README inside the NuGet package. -->
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
