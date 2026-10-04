@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using WinForms.Markdown.Markdown;
 using WinForms.Markdown.Rendering;
 

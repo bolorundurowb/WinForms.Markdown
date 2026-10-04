@@ -1,5 +1,3 @@
-using WinForms.Markdown;
-
 namespace WinForms.Markdown.Demo;
 
 internal static class Program

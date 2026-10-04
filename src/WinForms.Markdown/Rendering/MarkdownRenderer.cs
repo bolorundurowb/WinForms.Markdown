@@ -1,6 +1,4 @@
-using System.Drawing;
 using System.Text;
-using WinForms.Markdown;
 using WinForms.Markdown.Markdown;
 
 namespace WinForms.Markdown.Rendering;
