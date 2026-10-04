@@ -9,12 +9,7 @@ pipeline.
 
 ## Target frameworks
 
-The library targets:
-
-- .NET Framework 4.8 (`net48`)
-- .NET 6 (`net6.0-windows`)
-- .NET 8 (`net8.0-windows`)
-- .NET 10 (`net10.0-windows`)
+![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?logo=dotnet) ![.NET 6](https://img.shields.io/badge/.NET-6.0-512BD4?logo=dotnet) ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet) ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
 
 The sample application stays on a modern TFM.
 
@@ -60,21 +55,17 @@ form.Controls.Add(markdown);
 Application.Run(form);
 ```
 
-## Repository layout
+## Control properties
 
-```
-src/WinForms.Markdown/           # The library
-samples/WinForms.Markdown.Demo/  # Runnable usage example
-tests/WinForms.Markdown.Tests/   # Parser and renderer unit tests
-```
-
-## Build
-
-```powershell
-dotnet build WinForms.Markdown.slnx -c Release
-dotnet test tests/WinForms.Markdown.Tests/WinForms.Markdown.Tests.csproj -c Release
-dotnet pack src/WinForms.Markdown/WinForms.Markdown.csproj -c Release
-```
+| Property       | Type      | Default                        | Description                                                        |
+|----------------|-----------|--------------------------------|--------------------------------------------------------------------|
+| `MarkdownText` | `string`  | `""`                           | The raw Markdown to parse and render.                              |
+| `ForeColor`    | `Color`   | `SystemColors.WindowText`      | Default text colour.                                               |
+| `BackColor`    | `Color`   | `SystemColors.Window`          | Control background colour.                                         |
+| `Font`         | `Font`    | `SystemFonts.DefaultFont`      | Base font; headings and inline styles derive from this.            |
+| `Padding`      | `Padding` | `new Padding(10, 8, 10, 8)`    | Margin around the rendered document.                               |
+| `LinkColor`    | `Color`   | `Color.FromArgb(0, 102, 204)`  | Colour used for hyperlinks.                                        |
+| `AutoScroll`   | `bool`    | `true`                         | Enables the built-in vertical scrollbar.                           |
 
 ## Licence
 
