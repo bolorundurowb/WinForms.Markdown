@@ -43,50 +43,58 @@ jobs:
           Write-Host "Detected version: $version"
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Check whether tag already exists
+      - name: Ensure tag exists
         id: tag
         shell: pwsh
         run: |
           git fetch --tags --force
-          $version = '${{ steps.version.outputs.version }}'
-          $tag = "v$version"
-
-          # git tag --list always exits 0, so this check never fails the step.
-          $existing = git tag --list $tag
-          if ($existing) {
-            Write-Host "Tag '$tag' already exists - skipping release."
-            "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          } else {
-            Write-Host "Tag '$tag' does not exist - a release will be created."
-            "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-          }
-
-      - name: Create and push tag
-        if: steps.tag.outputs.exists == 'false'
-        shell: pwsh
-        run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           $version = '${{ steps.version.outputs.version }}'
           $tag = "v$version"
-          git tag -a $tag -m "Release $tag"
-          git push origin $tag
+
+          $existing = git tag --list $tag
+          if ($existing) {
+            Write-Host "Tag '$tag' already exists."
+          } else {
+            Write-Host "Tag '$tag' does not exist - creating and pushing it."
+            git tag -a $tag -m "Release $tag"
+            git push origin $tag
+          }
+
+      - name: Check whether release exists
+        id: release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $tag = "v$version"
+
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release '$tag' already exists - skipping build and release."
+            "exists=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          } else {
+            Write-Host "Release '$tag' does not exist - will build, pack, and create it."
+            "exists=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
 
       - name: Build
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: dotnet build src/WinForms.Markdown/WinForms.Markdown.csproj -c Release
 
       - name: Test
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: dotnet test tests/WinForms.Markdown.Tests/WinForms.Markdown.Tests.csproj -c Release
 
       - name: Pack
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         run: dotnet pack src/WinForms.Markdown/WinForms.Markdown.csproj -c Release --no-build -o artifacts -p:ContinuousIntegrationBuild=true
 
       - name: Create GitHub Release
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
