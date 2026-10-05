@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using WinForms.Markdown.Markdown;
 using WinForms.Markdown.Rendering;
 using Xunit;
@@ -14,7 +15,7 @@ public class MarkdownRendererTests
 
         var layout = renderer.Layout(MarkdownDocument.Empty, 400, Color.Black, Color.Blue, new Padding(10));
 
-        Assert.Empty(layout.Runs);
+        layout.Runs.Should().BeEmpty();
     }
 
     [Fact]
@@ -27,7 +28,7 @@ public class MarkdownRendererTests
         var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
 
         var run = layout.Runs.Single(r => r.Text == "bold");
-        Assert.True(run.Font.Bold);
+        run.Font.Bold.Should().BeTrue();
     }
 
     [Fact]
@@ -39,8 +40,8 @@ public class MarkdownRendererTests
 
         var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
 
-        Assert.Contains(layout.Runs, r => r.Text == "under" && r.Font.Underline);
-        Assert.Contains(layout.Runs, r => r.Text == "strike" && r.Font.Strikeout);
+        layout.Runs.Should().Contain(r => r.Text == "under" && r.Font.Underline);
+        layout.Runs.Should().Contain(r => r.Text == "strike" && r.Font.Strikeout);
     }
 
     [Fact]
@@ -55,8 +56,8 @@ public class MarkdownRendererTests
         var heading = layout.Runs.Single(r => r.Text == "Title");
         var plain = layout.Runs.Single(r => r.Text == "plain");
 
-        Assert.True(heading.Font.Bold);
-        Assert.True(heading.Font.Size > plain.Font.Size);
+        heading.Font.Bold.Should().BeTrue();
+        heading.Font.Size.Should().BeGreaterThan(plain.Font.Size);
     }
 
     [Fact]
@@ -70,7 +71,7 @@ public class MarkdownRendererTests
         var layout = renderer.Layout(document, 200, Color.Black, Color.Blue, new Padding(10));
 
         var lineYPositions = layout.Runs.Where(r => r.Text == "word").Select(r => r.Bounds.Y).Distinct().ToList();
-        Assert.True(lineYPositions.Count > 1);
+        lineYPositions.Count.Should().BeGreaterThan(1);
     }
 
     [Fact]
@@ -84,7 +85,7 @@ public class MarkdownRendererTests
         var shortLayout = renderer.Layout(shortDoc, 400, Color.Black, Color.Blue, new Padding(10));
         var longLayout = renderer.Layout(longDoc, 400, Color.Black, Color.Blue, new Padding(10));
 
-        Assert.True(longLayout.ContentHeight > shortLayout.ContentHeight);
+        longLayout.ContentHeight.Should().BeGreaterThan(shortLayout.ContentHeight);
     }
 
     [Fact]
@@ -97,8 +98,8 @@ public class MarkdownRendererTests
         var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
 
         var run = layout.Runs.Single(r => r.Text == "docs");
-        Assert.Equal("https://example.com", run.Url);
-        Assert.True(run.Font.Underline);
-        Assert.Equal(Color.Blue, run.Color);
+        run.Url.Should().Be("https://example.com");
+        run.Font.Underline.Should().BeTrue();
+        run.Color.Should().Be(Color.Blue);
     }
 }

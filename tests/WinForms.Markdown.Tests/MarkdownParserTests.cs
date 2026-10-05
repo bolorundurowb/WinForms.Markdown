@@ -1,3 +1,4 @@
+using AwesomeAssertions;
 using WinForms.Markdown.Markdown;
 using Xunit;
 
@@ -13,7 +14,7 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse(input);
 
-        Assert.Empty(document.Blocks);
+        document.Blocks.Should().BeEmpty();
     }
 
     [Fact]
@@ -21,13 +22,13 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("# Hello\n\n### World");
 
-        var h1 = Assert.IsType<HeadingBlock>(document.Blocks[0]);
-        var h3 = Assert.IsType<HeadingBlock>(document.Blocks[1]);
+        var h1 = document.Blocks[0].Should().BeOfType<HeadingBlock>().Which;
+        var h3 = document.Blocks[1].Should().BeOfType<HeadingBlock>().Which;
 
-        Assert.Equal(1, h1.Level);
-        Assert.Equal(3, h3.Level);
-        Assert.Equal("Hello", Assert.IsType<TextInline>(h1.Inlines[0]).Text);
-        Assert.Equal("World", Assert.IsType<TextInline>(h3.Inlines[0]).Text);
+        h1.Level.Should().Be(1);
+        h3.Level.Should().Be(3);
+        h1.Inlines[0].Should().BeOfType<TextInline>().Which.Text.Should().Be("Hello");
+        h3.Inlines[0].Should().BeOfType<TextInline>().Which.Text.Should().Be("World");
     }
 
     [Fact]
@@ -35,9 +36,9 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("first\n\nsecond");
 
-        Assert.Equal(2, document.Blocks.Count);
-        Assert.IsType<ParagraphBlock>(document.Blocks[0]);
-        Assert.IsType<ParagraphBlock>(document.Blocks[1]);
+        document.Blocks.Should().HaveCount(2);
+        document.Blocks[0].Should().BeOfType<ParagraphBlock>();
+        document.Blocks[1].Should().BeOfType<ParagraphBlock>();
     }
 
     [Fact]
@@ -45,10 +46,10 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("line one\nline two");
 
-        var paragraph = Assert.IsType<ParagraphBlock>(Assert.Single(document.Blocks));
-        var text = Assert.IsType<TextInline>(Assert.Single(paragraph.Inlines));
+        var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
+        var text = paragraph.Inlines.Should().ContainSingle().Which.Should().BeOfType<TextInline>().Which;
 
-        Assert.Equal("line one\nline two", text.Text);
+        text.Text.Should().Be("line one\nline two");
     }
 
     [Fact]
@@ -56,16 +57,16 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("a **b** *c* <u>d</u> ~e~ ~~f~~ __g__ _h_");
 
-        var paragraph = Assert.IsType<ParagraphBlock>(Assert.Single(document.Blocks));
+        var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
         var flat = Flatten(paragraph.Inlines);
 
-        Assert.Equal((InlineStyle.Bold, "b"), flat.First(x => x.Text == "b"));
-        Assert.Equal((InlineStyle.Italic, "c"), flat.First(x => x.Text == "c"));
-        Assert.Equal((InlineStyle.Underline, "d"), flat.First(x => x.Text == "d"));
-        Assert.Equal((InlineStyle.Underline, "e"), flat.First(x => x.Text == "e"));
-        Assert.Equal((InlineStyle.Strikethrough, "f"), flat.First(x => x.Text == "f"));
-        Assert.Equal((InlineStyle.Bold, "g"), flat.First(x => x.Text == "g"));
-        Assert.Equal((InlineStyle.Italic, "h"), flat.First(x => x.Text == "h"));
+        flat.First(x => x.Text == "b").Should().Be((InlineStyle.Bold, "b"));
+        flat.First(x => x.Text == "c").Should().Be((InlineStyle.Italic, "c"));
+        flat.First(x => x.Text == "d").Should().Be((InlineStyle.Underline, "d"));
+        flat.First(x => x.Text == "e").Should().Be((InlineStyle.Underline, "e"));
+        flat.First(x => x.Text == "f").Should().Be((InlineStyle.Strikethrough, "f"));
+        flat.First(x => x.Text == "g").Should().Be((InlineStyle.Bold, "g"));
+        flat.First(x => x.Text == "h").Should().Be((InlineStyle.Italic, "h"));
     }
 
     [Fact]
@@ -73,10 +74,10 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("**bold *and italic***");
 
-        var paragraph = Assert.IsType<ParagraphBlock>(Assert.Single(document.Blocks));
+        var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
         var flat = Flatten(paragraph.Inlines);
 
-        Assert.Equal((InlineStyle.Bold | InlineStyle.Italic, "and italic"), flat.First(x => x.Text == "and italic"));
+        flat.First(x => x.Text == "and italic").Should().Be((InlineStyle.Bold | InlineStyle.Italic, "and italic"));
     }
 
     [Fact]
@@ -84,11 +85,12 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("See [the docs](https://example.com/docs).");
 
-        var paragraph = Assert.IsType<ParagraphBlock>(Assert.Single(document.Blocks));
-        var link = Assert.IsType<LinkInline>(paragraph.Inlines[1]);
+        var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
+        var link = paragraph.Inlines[1].Should().BeOfType<LinkInline>().Which;
 
-        Assert.Equal("https://example.com/docs", link.Url);
-        Assert.Equal("the docs", Assert.IsType<TextInline>(Assert.Single(link.Children)).Text);
+        link.Url.Should().Be("https://example.com/docs");
+        var text = link.Children.Should().ContainSingle().Which.Should().BeOfType<TextInline>().Which;
+        text.Text.Should().Be("the docs");
     }
 
     [Fact]
@@ -96,11 +98,12 @@ public class MarkdownParserTests
     {
         var document = MarkdownParser.Parse("Visit <https://example.com>.");
 
-        var paragraph = Assert.IsType<ParagraphBlock>(Assert.Single(document.Blocks));
-        var link = Assert.IsType<LinkInline>(paragraph.Inlines[1]);
+        var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
+        var link = paragraph.Inlines[1].Should().BeOfType<LinkInline>().Which;
 
-        Assert.Equal("https://example.com", link.Url);
-        Assert.Equal("https://example.com", Assert.IsType<TextInline>(Assert.Single(link.Children)).Text);
+        link.Url.Should().Be("https://example.com");
+        var text = link.Children.Should().ContainSingle().Which.Should().BeOfType<TextInline>().Which;
+        text.Text.Should().Be("https://example.com");
     }
 
     private static List<(InlineStyle Style, string Text)> Flatten(IReadOnlyList<Inline> inlines)
