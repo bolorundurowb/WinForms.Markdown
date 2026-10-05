@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - 'src/WinForms.Markdown/WinForms.Markdown.csproj'
+  workflow_dispatch:
 
 permissions:
   contents: write

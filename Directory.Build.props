@@ -1,5 +1,4 @@
 <Project>
-
   <PropertyGroup>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -7,5 +6,4 @@
     <Deterministic>true</Deterministic>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
-
 </Project>
