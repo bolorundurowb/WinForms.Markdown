@@ -8,7 +8,8 @@
 
     <!-- NuGet package metadata -->
     <PackageId>WinForms.Markdown</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
+    <PackageReleaseNotes>Fixed garbled rendering when scrolling.</PackageReleaseNotes>
     <Authors>Winner-Timothy Bolorunduro</Authors>
     <Company>WinForms.Markdown</Company>
     <Product>WinForms.Markdown</Product>
