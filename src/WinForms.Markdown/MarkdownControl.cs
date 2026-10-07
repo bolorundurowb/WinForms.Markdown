@@ -128,13 +128,16 @@ public class MarkdownControl : ScrollableControl
             return;
         }
 
-        g.TranslateTransform(AutoScrollPosition.X, AutoScrollPosition.Y);
+        // GDI text (TextRenderer.DrawText) ignores the Graphics world transform, so
+        // a TranslateTransform for scrolling has no effect and leaves text painted
+        // at unscrolled coordinates once the scroll position moves away from the
+        // origin. Offset each run manually instead.
+        var scroll = AutoScrollPosition;
         foreach (var run in _layout.Runs)
         {
-            TextRenderer.DrawText(g, run.Text, run.Font, run.Bounds.Location, run.Color, DrawFlags);
+            var location = new Point(run.Bounds.X + scroll.X, run.Bounds.Y + scroll.Y);
+            TextRenderer.DrawText(g, run.Text, run.Font, location, run.Color, DrawFlags);
         }
-
-        g.ResetTransform();
     }
 
     protected override void OnMouseMove(MouseEventArgs e)

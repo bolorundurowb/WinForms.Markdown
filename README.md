@@ -1,6 +1,6 @@
 # WinForms.Markdown
 
-[![Release](https://github.com/bolorundurowb/WinForms.Markdown/actions/workflows/release.yml/badge.svg)](https://github.com/bolorundurowb/WinForms.Markdown/actions/workflows/release.yml) ![.NET Framework 4.8](https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?logo=dotnet) ![.NET 6](https://img.shields.io/badge/.NET-6.0-512BD4?logo=dotnet) ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet) ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
+[![Release](https://github.com/bolorundurowb/WinForms.Markdown/actions/workflows/release.yml/badge.svg)](https://github.com/bolorundurowb/WinForms.Markdown/actions/workflows/release.yml) ![.NET Framework 4.8](https://img.shields.io/badge/Framework-4.8-512BD4?logo=dotnet) ![.NET 6](https://img.shields.io/badge/.NET-6.0-512BD4?logo=dotnet) ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet) ![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
 
 
 A native, lightweight, open-source Markdown control for Windows Forms. Markdown
