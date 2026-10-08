@@ -29,11 +29,20 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <!-- Ship XML docs so consumers get IntelliSense. -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
   <!-- Ship the README inside the NuGet package. -->
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-
+  <!-- The layout engine and GDI helpers are internal; the tests exercise them directly. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="WinForms.Markdown.Tests" />
+  </ItemGroup>
 
 </Project>

@@ -36,6 +36,26 @@ internal sealed class MainForm : Form
         ## Header 2
         ### Header 3
 
+        ## Lists
+
+        1. First step
+        2. Second step
+           - a nested bullet with `inline code`
+           - and snake_case_names that stay literal
+        3. Third step
+
+        > Block quotes work too, and can contain **formatting**
+        > across several lines.
+
+        ## Code
+
+        ```csharp
+        var markdown = new MarkdownControl { Dock = DockStyle.Fill };
+        markdown.LinkClicked += (_, e) => Console.WriteLine(e.Url);
+        ```
+
+        ---
+
         ### Lorem ipsum
 
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod

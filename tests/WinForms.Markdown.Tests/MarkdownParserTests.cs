@@ -42,14 +42,28 @@ public class MarkdownParserTests
     }
 
     [Fact]
-    public void Parse_Paragraph_JoinsConsecutiveLines()
+    public void Parse_Paragraph_KeepsConsecutiveLinesWithSoftBreak()
     {
         var document = MarkdownParser.Parse("line one\nline two");
 
         var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
-        var text = paragraph.Inlines.Should().ContainSingle().Which.Should().BeOfType<TextInline>().Which;
 
-        text.Text.Should().Be("line one\nline two");
+        paragraph.Inlines.Should().HaveCount(3);
+        paragraph.Inlines[0].Should().BeOfType<TextInline>().Which.Text.Should().Be("line one");
+        paragraph.Inlines[1].Should().BeOfType<LineBreakInline>().Which.IsHard.Should().BeFalse();
+        paragraph.Inlines[2].Should().BeOfType<TextInline>().Which.Text.Should().Be("line two");
+    }
+
+    [Theory]
+    [InlineData("a\r\nb")]
+    [InlineData("a\rb")]
+    [InlineData("a\nb")]
+    public void Parse_AnyLineEnding_IsEquivalent(string input)
+    {
+        var inlines = TestHelpers.ParseInlines(input);
+
+        inlines.Should().HaveCount(3);
+        inlines[1].Should().BeOfType<LineBreakInline>();
     }
 
     [Fact]
@@ -58,7 +72,7 @@ public class MarkdownParserTests
         var document = MarkdownParser.Parse("a **b** *c* <u>d</u> ~e~ ~~f~~ __g__ _h_");
 
         var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
-        var flat = Flatten(paragraph.Inlines);
+        var flat = TestHelpers.Flatten(paragraph.Inlines);
 
         flat.First(x => x.Text == "b").Should().Be((InlineStyle.Bold, "b"));
         flat.First(x => x.Text == "c").Should().Be((InlineStyle.Italic, "c"));
@@ -75,7 +89,7 @@ public class MarkdownParserTests
         var document = MarkdownParser.Parse("**bold *and italic***");
 
         var paragraph = document.Blocks.Should().ContainSingle().Which.Should().BeOfType<ParagraphBlock>().Which;
-        var flat = Flatten(paragraph.Inlines);
+        var flat = TestHelpers.Flatten(paragraph.Inlines);
 
         flat.First(x => x.Text == "and italic").Should().Be((InlineStyle.Bold | InlineStyle.Italic, "and italic"));
     }
@@ -104,34 +118,5 @@ public class MarkdownParserTests
         link.Url.Should().Be("https://example.com");
         var text = link.Children.Should().ContainSingle().Which.Should().BeOfType<TextInline>().Which;
         text.Text.Should().Be("https://example.com");
-    }
-
-    private static List<(InlineStyle Style, string Text)> Flatten(IReadOnlyList<Inline> inlines)
-    {
-        var result = new List<(InlineStyle, string)>();
-
-        void Walk(IReadOnlyList<Inline> items, InlineStyle style)
-        {
-            foreach (var inline in items)
-            {
-                switch (inline)
-                {
-                    case TextInline text:
-                        result.Add((style, text.Text));
-                        break;
-
-                    case FormattedInline formatted:
-                        Walk(formatted.Children, style | formatted.Style);
-                        break;
-
-                    case LinkInline link:
-                        Walk(link.Children, style);
-                        break;
-                }
-            }
-        }
-
-        Walk(inlines, InlineStyle.Regular);
-        return result;
     }
 }

@@ -5,101 +5,111 @@ using Xunit;
 
 namespace WinForms.Markdown.Tests;
 
+/// <summary>Layout through the real GDI metrics (needs Windows and the Segoe UI font).</summary>
 public class MarkdownRendererTests
 {
+    private static (MarkdownLayout Layout, GdiTextMetrics Metrics) Layout(string markdown, int width = 400)
+    {
+        var font = new Font("Segoe UI", 10f);
+        var metrics = new GdiTextMetrics(font);
+        var layout = MarkdownLayoutEngine.Layout(MarkdownParser.Parse(markdown), metrics, width, new LayoutInsets(10, 10, 10, 10), true);
+        return (layout, metrics);
+    }
+
     [Fact]
     public void Layout_EmptyDocument_HasNoRuns()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-
-        var layout = renderer.Layout(MarkdownDocument.Empty, 400, Color.Black, Color.Blue, new Padding(10));
-
-        layout.Runs.Should().BeEmpty();
+        var (layout, metrics) = Layout(string.Empty);
+        using (metrics)
+        {
+            layout.Runs.Should().BeEmpty();
+        }
     }
 
     [Fact]
     public void Layout_BoldRun_HasBoldFont()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-        var document = MarkdownParser.Parse("**bold**");
-
-        var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
-
-        var run = layout.Runs.Single(r => r.Text == "bold");
-        run.Font.Bold.Should().BeTrue();
+        var (layout, metrics) = Layout("**bold**");
+        using (metrics)
+        {
+            var run = layout.Runs.Single(r => r.Text == "bold");
+            metrics.GetFont(run.Style).Bold.Should().BeTrue();
+        }
     }
 
     [Fact]
     public void Layout_UnderlineAndStrikethrough_SetFontStyles()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-        var document = MarkdownParser.Parse("<u>under</u> ~~strike~~");
-
-        var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
-
-        layout.Runs.Should().Contain(r => r.Text == "under" && r.Font.Underline);
-        layout.Runs.Should().Contain(r => r.Text == "strike" && r.Font.Strikeout);
+        var (layout, metrics) = Layout("<u>under</u> ~~strike~~");
+        using (metrics)
+        {
+            layout.Runs.Should().Contain(r => r.Text == "under" && metrics.GetFont(r.Style).Underline);
+            layout.Runs.Should().Contain(r => r.Text == "strike" && metrics.GetFont(r.Style).Strikeout);
+        }
     }
 
     [Fact]
     public void Layout_Heading_UsesLargerBoldFont()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-        var document = MarkdownParser.Parse("# Title\n\nplain");
+        var (layout, metrics) = Layout("# Title\n\nplain");
+        using (metrics)
+        {
+            var heading = metrics.GetFont(layout.Runs.Single(r => r.Text == "Title").Style);
+            var plain = metrics.GetFont(layout.Runs.Single(r => r.Text == "plain").Style);
 
-        var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
-
-        var heading = layout.Runs.Single(r => r.Text == "Title");
-        var plain = layout.Runs.Single(r => r.Text == "plain");
-
-        heading.Font.Bold.Should().BeTrue();
-        heading.Font.Size.Should().BeGreaterThan(plain.Font.Size);
+            heading.Bold.Should().BeTrue();
+            heading.Size.Should().BeGreaterThan(plain.Size);
+        }
     }
 
     [Fact]
-    public void Layout_WrapsLongTextOntoMultipleLines()
+    public void Layout_CodeRun_UsesMonospaceFamily()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-        var text = string.Join(" ", Enumerable.Repeat("word", 200));
-        var document = MarkdownParser.Parse(text);
+        var (layout, metrics) = Layout("some `code` here");
+        using (metrics)
+        {
+            var code = metrics.GetFont(layout.Runs.Single(r => r.Text == "code").Style);
+            var plain = metrics.GetFont(layout.Runs.First(r => r.Text.Contains("some")).Style);
 
-        var layout = renderer.Layout(document, 200, Color.Black, Color.Blue, new Padding(10));
-
-        var lineYPositions = layout.Runs.Where(r => r.Text == "word").Select(r => r.Bounds.Y).Distinct().ToList();
-        lineYPositions.Count.Should().BeGreaterThan(1);
+            code.FontFamily.Name.Should().NotBe(plain.FontFamily.Name);
+        }
     }
 
     [Fact]
-    public void Layout_ContentHeight_GrowsWithContent()
+    public void Layout_WrapsLongTextAndStaysWithinWidth()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-        var shortDoc = MarkdownParser.Parse("# one");
-        var longDoc = MarkdownParser.Parse("# one\n\n# two\n\n# three\n\n# four");
-
-        var shortLayout = renderer.Layout(shortDoc, 400, Color.Black, Color.Blue, new Padding(10));
-        var longLayout = renderer.Layout(longDoc, 400, Color.Black, Color.Blue, new Padding(10));
-
-        longLayout.ContentHeight.Should().BeGreaterThan(shortLayout.ContentHeight);
+        var (layout, metrics) = Layout(string.Join(" ", Enumerable.Repeat("word", 200)), width: 200);
+        using (metrics)
+        {
+            layout.Runs.Select(r => r.LineTop).Distinct().Count().Should().BeGreaterThan(1);
+            layout.Runs.Max(r => r.Bounds.Right).Should().BeLessThanOrEqualTo(190);
+        }
     }
 
     [Fact]
     public void Layout_Link_IsUnderlinedAndCarriesUrl()
     {
-        using var font = new Font("Segoe UI", 10f);
-        using var renderer = new MarkdownRenderer(font);
-        var document = MarkdownParser.Parse("[docs](https://example.com)");
+        var (layout, metrics) = Layout("[docs](https://example.com)");
+        using (metrics)
+        {
+            var run = layout.Runs.Single(r => r.Text == "docs");
+            run.Url.Should().Be("https://example.com");
+            run.Role.Should().Be(ColorRole.Link);
+            metrics.GetFont(run.Style).Underline.Should().BeTrue();
+        }
+    }
 
-        var layout = renderer.Layout(document, 400, Color.Black, Color.Blue, new Padding(10));
+    [Fact]
+    public void Metrics_CachesMeasurements_AndReturnsStableWidths()
+    {
+        var (_, metrics) = Layout(string.Empty);
+        using (metrics)
+        {
+            var style = new TextStyle(1f, InlineStyle.Regular);
+            var first = metrics.MeasureWidth("hello world", style);
 
-        var run = layout.Runs.Single(r => r.Text == "docs");
-        run.Url.Should().Be("https://example.com");
-        run.Font.Underline.Should().BeTrue();
-        run.Color.Should().Be(Color.Blue);
+            metrics.MeasureWidth("hello world", style).Should().Be(first);
+            first.Should().BeGreaterThan(metrics.MeasureWidth("hello", style));
+        }
     }
 }
