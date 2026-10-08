@@ -26,23 +26,23 @@ The sample application stays on a modern TFM.
 
 ### Supported syntax
 
-| Element        | Markdown                                                                  |
-|----------------|---------------------------------------------------------------------------|
-| Headings       | `# H1` … `###### H6`, optional closing hashes, and `Setext` (`===` / `---`) |
-| Bold           | `**bold**` or `__bold__`                                                  |
-| Italic         | `*italic*` or `_italic_`                                                  |
-| Underline      | `<u>underline</u>` or `~underline~`                                       |
-| Strikethrough  | `~~strikethrough~~`                                                       |
-| Inline code    | `` `code` `` (use double backticks to include a single one)               |
-| Code blocks    | Fenced with ```` ``` ```` or `~~~` (language tag is parsed, not highlighted) |
-| Hyperlinks     | `[text](url)` and `<https://example.com>`                                 |
-| Images         | `![alt](url)` renders as a link showing the alt text (no image loading)   |
-| Lists          | `-`, `*`, `+` and `1.` / `1)`; nested; tight and loose                    |
-| Block quotes   | `> quote`, nested, with lazy continuation                                 |
-| Horizontal rule| `---`, `***` or `___`                                                     |
-| Paragraphs     | Consecutive lines; a blank line starts a new paragraph                    |
-| Line breaks    | Two trailing spaces, a trailing `\`, or `<br>`                            |
-| Escapes        | `\*`, `\_`, `\[` … and entities such as `&amp;`, `&#65;`                  |
+| Element         | Markdown                                                                     |
+|-----------------|------------------------------------------------------------------------------|
+| Headings        | `# H1` … `###### H6`, optional closing hashes, and `Setext` (`===` / `---`)  |
+| Bold            | `**bold**` or `__bold__`                                                     |
+| Italic          | `*italic*` or `_italic_`                                                     |
+| Underline       | `<u>underline</u>` or `~underline~`                                          |
+| Strikethrough   | `~~strikethrough~~`                                                          |
+| Inline code     | `` `code` `` (use double backticks to include a single one)                  |
+| Code blocks     | Fenced with ```` ``` ```` or `~~~` (language tag is parsed, not highlighted) |
+| Hyperlinks      | `[text](url)` and `<https://example.com>`                                    |
+| Images          | `![alt](url)` renders as a link showing the alt text (no image loading)      |
+| Lists           | `-`, `*`, `+` and `1.` / `1)`; nested; tight and loose                       |
+| Block quotes    | `> quote`, nested, with lazy continuation                                    |
+| Horizontal rule | `---`, `***` or `___`                                                        |
+| Paragraphs      | Consecutive lines; a blank line starts a new paragraph                       |
+| Line breaks     | Two trailing spaces, a trailing `\`, or `<br>`                               |
+| Escapes         | `\*`, `\_`, `\[` … and entities such as `&amp;`, `&#65;`                     |
 
 Emphasis follows CommonMark's flanking rules, so `snake_case_names` and `2 * 3 * 4` are left alone.
 
@@ -94,21 +94,21 @@ markdown.LinkClicked += (_, e) =>
 
 ## Control properties
 
-| Property             | Type      | Default                       | Description                                                                 |
-|----------------------|-----------|-------------------------------|-----------------------------------------------------------------------------|
-| `MarkdownText`       | `string`  | `""`                          | The raw Markdown to parse and render.                                       |
-| `ForeColor`          | `Color`   | `SystemColors.WindowText`     | Default text colour.                                                        |
-| `BackColor`          | `Color`   | `SystemColors.Window`         | Control background colour.                                                  |
-| `Font`               | `Font`    | `SystemFonts.DefaultFont`     | Base font; headings and inline styles derive from this.                     |
-| `Padding`            | `Padding` | `new Padding(10, 8, 10, 8)`   | Margin around the rendered document.                                        |
-| `LinkColor`          | `Color`   | `Color.FromArgb(0, 102, 204)` | Colour used for hyperlinks.                                                 |
+| Property             | Type      | Default                       | Description                                                                         |
+|----------------------|-----------|-------------------------------|-------------------------------------------------------------------------------------|
+| `MarkdownText`       | `string`  | `""`                          | The raw Markdown to parse and render.                                               |
+| `ForeColor`          | `Color`   | `SystemColors.WindowText`     | Default text colour.                                                                |
+| `BackColor`          | `Color`   | `SystemColors.Window`         | Control background colour.                                                          |
+| `Font`               | `Font`    | `SystemFonts.DefaultFont`     | Base font; headings and inline styles derive from this.                             |
+| `Padding`            | `Padding` | `new Padding(10, 8, 10, 8)`   | Margin around the rendered document.                                                |
+| `LinkColor`          | `Color`   | `Color.FromArgb(0, 102, 204)` | Colour used for hyperlinks.                                                         |
 | `CodeBackColor`      | `Color`   | `Color.Empty`                 | Background of code spans/blocks. Empty derives a tint from `BackColor`/`ForeColor`. |
-| `RuleColor`          | `Color`   | `Color.Empty`                 | Colour of horizontal rules and quote bars. Empty derives it likewise.       |
-| `PreserveLineBreaks` | `bool`    | `true`                        | Whether a single newline in a paragraph starts a new line.                  |
-| `AutoScroll`         | `bool`    | `true`                        | Enables the built-in scrollbars.                                            |
+| `RuleColor`          | `Color`   | `Color.Empty`                 | Colour of horizontal rules and quote bars. Empty derives it likewise.               |
+| `PreserveLineBreaks` | `bool`    | `true`                        | Whether a single newline in a paragraph starts a new line.                          |
+| `AutoScroll`         | `bool`    | `true`                        | Enables the built-in scrollbars.                                                    |
 
-| Event         | Description                                                              |
-|---------------|--------------------------------------------------------------------------|
+| Event         | Description                                                                |
+|---------------|----------------------------------------------------------------------------|
 | `LinkClicked` | A link was clicked. Set `e.Handled = true` to suppress the default action. |
 
 ## Licence
