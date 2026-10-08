@@ -8,8 +8,8 @@
 
     <!-- NuGet package metadata -->
     <PackageId>WinForms.Markdown</PackageId>
-    <Version>1.0.1</Version>
-    <PackageReleaseNotes>Fixed garbled rendering when scrolling.</PackageReleaseNotes>
+    <Version>2.0.0</Version>
+    <PackageReleaseNotes>Adds lists, block quotes, code spans and blocks, horizontal rules, setext headings, escapes, entities and hard line breaks; a LinkClicked event; keyboard scrolling; and CodeBackColor, RuleColor and PreserveLineBreaks properties. Fixes double-subtracted padding, orphaned punctuation after styled text, non-wrapping headings, overflowing long words, broken underlines across spaces, and emphasis false positives such as snake_case_names. Parsing now happens once per text change and painting is clipped to the visible area. Breaking: MarkdownRenderer, TextRun and MarkdownLayout are now internal, and a newline inside a paragraph is a LineBreakInline in the AST instead of a "\n" in a TextInline.</PackageReleaseNotes>
     <Authors>Winner-Timothy Bolorunduro</Authors>
     <Company>WinForms.Markdown</Company>
     <Product>WinForms.Markdown</Product>
